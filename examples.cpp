@@ -7,7 +7,7 @@ using namespace std;
 
 void stats()
 {
-    vector<int> data = {1, 2, 3, 4, 5, 6, 2};
+    vector<int> data = {1, 2, 2, 3, 4, 5, 6, 7};
     stats_report<int> report = create_stats_report<int>(data, data.size());
     print_stats_report(report, cout);
 }
@@ -39,7 +39,7 @@ void multiple_costs_example()
         this_thread::sleep_for(chrono::milliseconds(100));
     }, 10);
     cout << "Costs:\n";
-    for (auto cost : costs)
+    for (uint64_t cost : costs)
         cout << '\t' << cost << '\n';
     cout << '\n';
 }

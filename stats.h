@@ -36,6 +36,8 @@ struct stats_report
     data_type max;
     data_type range;
     data_type mode;
+    double first_quartile;
+    double third_quartile;
     double mean;
     double median;
     double variance;
@@ -93,8 +95,7 @@ double median (const iteratable & data, unsigned size)
 {
     if (data.begin() == data.end())
         throw stats_exception("Invalid data points");
-
-    return (data[size/2] + data[ceil(size/2)])/2;
+    return (data[(size-1)/2] + data[ceil(size/2)])/2.0;
 }
 
 template <typename data_type, typename iteratable>
@@ -112,6 +113,19 @@ double variance (const iteratable & data, uint32_t count, double mean)
 }
 
 template <typename data_type, typename iteratable>
+std::pair<double, double> quartiles (const iteratable & data, unsigned size)
+{
+    if (data.begin() == data.end())
+        throw stats_exception("Invalid data points");
+
+    unsigned quartile_size = size/2;
+    unsigned third_start = (size-1)/2 + 1;
+    double first = (data[(quartile_size-1)/2] + data[ceil(quartile_size/2)])/2.0;
+    double third = (data[third_start + ((quartile_size-1)/2)] + data[third_start + ceil(quartile_size/2)])/2.0;
+    return {first, third};
+}
+
+template <typename data_type, typename iteratable>
 stats_report<data_type> create_stats_report (const iteratable & data, unsigned n)
 {
     auto sorted = data;
@@ -122,6 +136,7 @@ stats_report<data_type> create_stats_report (const iteratable & data, unsigned n
     double mean = (double)sum/n;
     double var = variance<data_type>(sorted, n, mean);
     double sd = sqrt(var);
+    auto q1_q3 = quartiles<data_type>(sorted, sorted.size());
 
     return stats_report<data_type> {
         n,
@@ -130,6 +145,8 @@ stats_report<data_type> create_stats_report (const iteratable & data, unsigned n
         max,
         max - min,
         mode<data_type>(sorted),
+        q1_q3.first,
+        q1_q3.second,
         mean,
         median<data_type>(sorted, n),
         var,
@@ -149,6 +166,8 @@ void print_stats_report (const stats_report<data_type> & report, std::ostream & 
            << "\tMean: " << report.mean << "\n"
            << "\tMedian: " << report.median << "\n"
            << "\tMode: " << report.mode << "\n"
+           << "\t25th Quartile: " << report.first_quartile << "\n"
+           << "\t75th Quartile: " << report.third_quartile << "\n"
            << "\tVariance: " << report.variance << "\n"
            << "\tSD: " << report.standard_deviation << "\n";
 }
